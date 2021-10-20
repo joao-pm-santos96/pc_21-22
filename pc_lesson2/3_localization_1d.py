@@ -1,7 +1,7 @@
 colors = ['red', 'green', 'green', 'red' , 'red']
 
-measurements = ['green'] # test 1
-motions = [[1]] # test 1
+#measurements = ['green'] # test 1
+#motions = [[1]] # test 1
 measurements = ['green', 'green', 'green' ,'green', 'green','red']  # test 2
 motions = [[1],[0],[-1],[1],[1],[0]] # test 2
 
@@ -10,6 +10,54 @@ sensor_right['green'] = 0.6
 sensor_right['red'] = 0.8
 
 p_move = 0.8
+
+def compute_measure_green(p, Z):
+    
+    for i in range(len(p)):
+        p_green_x = 0
+        p_green = 0
+
+        if Z == colors[i]:
+            p_green_x = sensor_right['green']
+            p_green = p_green_x * p[i] + (1 - sensor_right['red']) * (1 - p[i])
+        else:
+            p_green_x = (1 - sensor_right['green'])
+            p_green = p_green_x * p[i] + sensor_right['green'] * (1 - p[i])
+
+        p[i] = p_green_x * p[i] / p_green
+
+    return p
+
+def compute_measure_red(p, Z):
+    
+    for i in range(len(p)):
+        p_red_x = 0
+        p_red = 0
+
+        if Z == colors[i]:
+            p_red_x = sensor_right['red']
+            p_red = p_red_x * p[i] + (1 - sensor_right['green']) * (1 - p[i])
+        else:
+            p_red_x = (1 - sensor_right['red'])
+            p_red = p_red_x * p[i] + sensor_right['red'] * (1 - p[i])
+
+        p[i] = p_red_x * p[i] / p_red
+
+    return p
+
+def sense(p, Z):
+    """Update belief array p according to new measurement Z"""
+    # TODO: insert your code here
+
+    if Z == 'green':
+        p = compute_measure_green(p, Z)
+    elif Z == 'red':
+        p = compute_measure_red(p, Z)
+
+    norm = [float(i)/sum(p) for i in p]
+    p = norm
+
+    return p
 
 def compute_right(p):
     p_aux = []
@@ -31,21 +79,6 @@ def compute_left(p):
 
     return p_aux
 
-def sense(p, Z):
-    """Update belief array p according to new measurement Z"""
-    # TODO: insert your code here
-
-    for i in range(len(p)):
-        if Z == colors[i]:
-            p[i] = p[i] * sensor_right['green']
-        else:
-            p[i] = p[i] * (1.0 - sensor_right['red'])        
-
-    norm = [float(i)/sum(p) for i in p]
-    p = norm
-
-    return p
-
 def move(p, U):
     """Update p after movement U"""
     #TODO: insert your code here
@@ -66,7 +99,6 @@ if __name__ == '__main__':
 
     for c in range(width):
         p.append(1./n)
-
 
     for s in range(len(measurements)):
         print("sense ",measurements[s])
