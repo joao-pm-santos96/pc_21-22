@@ -17,7 +17,7 @@ def compute_measure_green(p, Z):
             p_green_x = sensor_right['green']
             p_green = p_green_x * p[i] + (1 - sensor_right['red']) * (1 - p[i])
         else:
-            p_green_x = (1 - sensor_right['green'])
+            p_green_x = (1 - sensor_right['red'])
             p_green = p_green_x * p[i] + sensor_right['green'] * (1 - p[i])
 
         p[i] = p_green_x * p[i] / p_green
@@ -34,7 +34,7 @@ def compute_measure_red(p, Z):
             p_red_x = sensor_right['red']
             p_red = p_red_x * p[i] + (1 - sensor_right['green']) * (1 - p[i])
         else:
-            p_red_x = (1 - sensor_right['red'])
+            p_red_x = (1 - sensor_right['green'])
             p_red = p_red_x * p[i] + sensor_right['red'] * (1 - p[i])
 
         p[i] = p_red_x * p[i] / p_red
