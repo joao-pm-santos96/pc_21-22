@@ -67,7 +67,7 @@ class robot:
     def set(self, new_x, new_y, new_orientation):
 
         if new_orientation < 0 or new_orientation >= 2 * pi:
-            raise ValueError, 'Orientation must be in [0..2pi]'
+            raise (ValueError, 'Orientation must be in [0..2pi]')
         self.x = float(new_x)
         self.y = float(new_y)
         self.orientation = float(new_orientation)
@@ -171,10 +171,10 @@ motions = [[0.2, 10.] for row in range(10)]
 
 T = len(motions)
 
-print 'Robot:    ', myrobot
+print ('Robot:    ', myrobot)
 for t in range(T):
     myrobot = myrobot.move(motions[t])
-    print 'Robot:    ', myrobot
+    print ('Robot:    ', myrobot)
 
 ## IMPORTANT: You may uncomment the test cases below to test your code.
 ## But when you submit this code, your test cases MUST be commented
