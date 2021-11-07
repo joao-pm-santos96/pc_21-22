@@ -86,7 +86,7 @@ class robot:
     def set(self, new_x, new_y, new_orientation):
 
         if new_orientation < 0 or new_orientation >= 2 * pi:
-            raise ValueError, 'Orientation must be in [0..2pi]'
+            raise (ValueError, 'Orientation must be in [0..2pi]')
         self.x = float(new_x)
         self.y = float(new_y)
         self.orientation = float(new_orientation)
@@ -145,6 +145,27 @@ class robot:
     def move(self, motion): # Do not change the name of this function
 
         # ADD CODE HERE
+        result = robot(self.length)
+        result.set_noise(self.bearing_noise, self.steering_noise, self.distance_noise)
+
+        # basically a straight implementation of the equations for bicycle-based movement
+        # added gaussians for hw3_6
+        alpha = random.gauss(motion[0], self.steering_noise)
+        d = random.gauss(motion[1], self.distance_noise)
+        beta = d * tan(alpha) / self.length
+
+        if abs(beta) < 0.001:
+        	# no movement
+        	result.x = self.x + d * cos(self.orientation)
+        	result.y = self.y + d * sin(self.orientation)
+        else:
+        	R = d / beta
+        	cx = self.x - sin(self.orientation) * R
+        	cy = self.y + cos(self.orientation) * R
+        	result.x = cx + sin(self.orientation + beta) * R
+        	result.y = cy - cos(self.orientation + beta) * R
+
+        result.orientation = (self.orientation + beta) % (2*pi)
 
         
         return result # make sure your move function returns an instance
@@ -160,6 +181,12 @@ class robot:
 
         # ENTER CODE HERE
         # HINT: You will probably need to use the function atan2()
+        for l in landmarks:
+            direction = atan2(l[0] - self.y, l[1] - self.x)
+            bearing = direction - self.orientation
+            if addNoise == 1:
+            	bearing += random.gauss(0, self.bearing_noise)
+            Z.append(bearing % (2 * pi))
 
 
         return Z #Leave this line here. Return vector Z of 4 bearings.
@@ -209,7 +236,7 @@ def generate_ground_truth(motions):
     for t in range(T):
         myrobot = myrobot.move(motions[t])
         Z.append(myrobot.sense())
-    print 'Robot:    ', myrobot
+    print ('Robot:    ', myrobot)
     return [myrobot, Z]
 
 # --------
@@ -222,13 +249,13 @@ def print_measurements(Z):
 
     T = len(Z)
 
-    print 'measurements = [[%.8s, %.8s, %.8s, %.8s],' % \
-        (str(Z[0][0]), str(Z[0][1]), str(Z[0][2]), str(Z[0][3]))
+    print ('measurements = [[%.8s, %.8s, %.8s, %.8s],' % \
+        (str(Z[0][0]), str(Z[0][1]), str(Z[0][2]), str(Z[0][3])))
     for t in range(1,T-1):
-        print '                [%.8s, %.8s, %.8s, %.8s],' % \
-            (str(Z[t][0]), str(Z[t][1]), str(Z[t][2]), str(Z[t][3]))
-    print '                [%.8s, %.8s, %.8s, %.8s]]' % \
-        (str(Z[T-1][0]), str(Z[T-1][1]), str(Z[T-1][2]), str(Z[T-1][3]))
+        print ('                [%.8s, %.8s, %.8s, %.8s],' % \
+            (str(Z[t][0]), str(Z[t][1]), str(Z[t][2]), str(Z[t][3])))
+    print ('                [%.8s, %.8s, %.8s, %.8s]]' % \
+        (str(Z[T-1][0]), str(Z[T-1][1]), str(Z[T-1][2]), str(Z[T-1][3])))
 
 # --------
 #
@@ -256,6 +283,10 @@ def particle_filter(motions, measurements, N=500): # I know it's tempting, but d
     # 
 
     p = []
+    for i in range(N):
+        r =robot()
+        r.set_noise(bearing_noise, steering_noise, distance_noise)
+        p.append(r)
 
     # --------
     #
@@ -265,17 +296,29 @@ def particle_filter(motions, measurements, N=500): # I know it's tempting, but d
     for t in range(len(motions)):
     
         # motion update (prediction)
+        p = [e.move(motions[t]) for e in p]
 
- 	    print 'p after motion ', p
+        print('p after motion ', p)
 
         # measurement update
-        w = []
+        w=[e.measurement_prob(measurements[t]) for e in p]
 
-	    print 'w ', w
+        print('w ', w)
 
         # resampling
+        p3 = []
+        index = int(random.random() * N)
+        beta = 0.0
+        mw = max(w)
+        for i in range(N):
+        	beta += random.random() * 2.0 * mw
+        	while beta > w[index]:
+        		beta -= w[index]
+        		index = (index + 1) % N
+        	p3.append(p[index])
+        p = p3
 
-	    print 'p resamp', p
+        print ('p resamp', p)
     
     return get_position(p)
 
@@ -311,7 +354,7 @@ measurements = [[4.746936, 3.859782, 3.045217, 2.045506],
                 [0.194460, 5.660382, 4.761072, 2.471682],
                 [5.717342, 4.736780, 3.909599, 2.342536]]
 
-print particle_filter(motions, measurements)
+print(particle_filter(motions, measurements))
 ##
 
 ##motions = [[2. * pi / 10, 20.] for row in range(2)]
