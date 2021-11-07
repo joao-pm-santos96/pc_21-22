@@ -69,7 +69,7 @@ class robot:
 
     def set(self, new_x, new_y, new_orientation):
         if new_orientation < 0 or new_orientation >= 2 * pi:
-            raise ValueError, 'Orientation must be in [0..2pi]'
+            raise (ValueError, 'Orientation must be in [0..2pi]')
         self.x = float(new_x)
         self.y = float(new_y)
         self.orientation = float(new_orientation)
@@ -98,7 +98,10 @@ class robot:
 
         # ENTER CODE HERE
         # HINT: You will probably need to use the function atan2()
-
+        for l in landmarks:
+            direction = atan2(l[0] - self.y, l[1] - self.x)
+            bearing = direction - self.orientation
+            Z.append(bearing % (2 * pi))
 
         return Z #Leave this line here. Return vector Z of 4 bearings.
     
@@ -151,8 +154,8 @@ myrobot = robot(length)
 myrobot.set(30.0, 20.0, pi / 5.0)
 myrobot.set_noise(bearing_noise, steering_noise, distance_noise)
 
-print 'Robot:        ', myrobot
-print 'Measurements: ', myrobot.sense()
+print ('Robot:        ', myrobot)
+print ('Measurements: ', myrobot.sense())
 ##
 
 
